@@ -25,6 +25,8 @@
     --due-ink: #ed4956;
     --info-bg: #e5f3ff;
     --info-ink: #0077cc;
+    --fresh-bg: #e3f5e9;
+    --fresh-ink: #1f8a4c;
     --story-alert: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
   }
   @media (prefers-color-scheme: dark) {
@@ -35,6 +37,7 @@
       --warn-bg: #2b2000; --warn-ink: #ffb84d;
       --due-bg: #2e0f0d; --due-ink: #ff6b62;
       --info-bg: #04263d; --info-ink: #4db5ff;
+      --fresh-bg: #0e2b1a; --fresh-ink: #4cc27e;
     }
   }
   * { box-sizing: border-box; }
@@ -111,6 +114,21 @@
   }
   .feed-title { font-size: 1.02rem; font-weight: 800; margin: 0; }
   .feed-sort { font-size: 0.72rem; color: var(--ink-soft); }
+
+  /* 장제 기간 필터 버튼 */
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 10px; }
+  .fbtn {
+    font: inherit; font-size: 0.78rem; font-weight: 700; padding: 6px 12px;
+    border-radius: 999px; border: 1px solid var(--line); cursor: pointer;
+    background: var(--card); color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .fbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .fbtn.fresh { background: var(--fresh-bg); color: var(--fresh-ink); border-color: transparent; }
+  .fbtn.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
+  .fbtn.due { background: var(--due-bg); color: var(--due-ink); border-color: transparent; }
+  .fbtn.on { outline: 2px solid currentColor; outline-offset: -1px; }
+  .fbtn.all.on { background: var(--ink); color: var(--card); border-color: var(--ink); outline: none; }
 
   .notice {
     background: var(--card); border: 1px solid var(--line); border-radius: 12px;
@@ -245,6 +263,7 @@
 
   var currentTeam = null;
   var openHorse = null;
+  var shoeFilter = null;   // null=전체, 'fresh'=7일 이내, 'warn'=3주 경과, 'due'=30일 경과
   var lastError = "";
   var syncing = false;
   var progress = 0;
@@ -596,8 +615,32 @@
       return a.name.localeCompare(b.name, "ko");
     });
 
-    html += '<div class="feed-head"><h2 class="feed-title">' + esc(teamLabel(currentTeam || "")) + " · " + list.length + "마리</h2>" +
+    // 장제 경과일 구간: 7일 이내 / 3주 경과(21~29일) / 30일 경과(기록 없음 포함)
+    function shoeBucket(v) {
+      var d = v.shoe ? daysAgo(v.shoe.date) : null;
+      if (d === null || d >= 30) return "due";
+      if (d >= 21) return "warn";
+      if (d <= 7) return "fresh";
+      return "";
+    }
+    var counts = { fresh: 0, warn: 0, due: 0 };
+    list.forEach(function (v) { var b = shoeBucket(v); if (counts[b] !== undefined) counts[b]++; });
+    var shown = shoeFilter ? list.filter(function (v) { return shoeBucket(v) === shoeFilter; }) : list;
+
+    html += '<div class="feed-head"><h2 class="feed-title">' + esc(teamLabel(currentTeam || "")) + " · " + shown.length + "마리</h2>" +
       '<span class="feed-sort">최근 경주 순</span></div>';
+
+    html += '<div class="filter-row">' +
+      '<button class="fbtn all' + (!shoeFilter ? " on" : "") + '" data-filter="">전체 ' + list.length + "</button>" +
+      '<button class="fbtn fresh' + (shoeFilter === "fresh" ? " on" : "") + '" data-filter="fresh">장제 7일 이내 ' + counts.fresh + "</button>" +
+      '<button class="fbtn warn' + (shoeFilter === "warn" ? " on" : "") + '" data-filter="warn">3주 경과 ' + counts.warn + "</button>" +
+      '<button class="fbtn due' + (shoeFilter === "due" ? " on" : "") + '" data-filter="due">30일 경과 ' + counts.due + "</button>" +
+      "</div>";
+
+    if (shoeFilter && !shown.length) {
+      html += '<div class="notice">해당 기간의 말이 없습니다.</div>';
+    }
+    list = shown;
 
     list.forEach(function (v) {
       var shoeChip;
@@ -639,6 +682,14 @@
     view.querySelectorAll(".story[data-team]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         currentTeam = btn.getAttribute("data-team");
+        openHorse = null;
+        render();
+      });
+    });
+    view.querySelectorAll(".fbtn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var f = btn.getAttribute("data-filter") || null;
+        shoeFilter = shoeFilter === f ? null : f;   // 같은 버튼을 다시 누르면 전체로
         openHorse = null;
         render();
       });
