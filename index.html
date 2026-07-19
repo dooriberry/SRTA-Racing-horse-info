@@ -488,9 +488,9 @@
     var key = getKey();
     var html = '<div class="setup">';
 
-    // 인증키 입력 (공공데이터포털에서 발급받은 일반 인증키)
-    html += '<div class="section-label">공공데이터포털 인증키</div>';
+    // 인증키 섹션은 평소에 숨김 — 키가 전혀 없을 때만 입력창을 보여준다 (비상용)
     if (!key) {
+      html += '<div class="section-label">공공데이터포털 인증키</div>';
       html += '<div class="notice" style="margin:8px 0">마사회 데이터를 불러오려면 공공데이터포털(data.go.kr)에서 발급받은 ' +
         "일반 인증키를 한 번만 입력해주세요. 이 기기에만 저장됩니다.</div>" +
         '<div class="field"><input id="f-key" type="text" placeholder="인증키 붙여넣기" autocomplete="off"></div>' +
@@ -505,9 +505,6 @@
       });
       return;
     }
-    html += '<div class="notice" style="margin:8px 0">인증키 등록됨 (끝 4자리 …' + esc(key.slice(-4)) +
-      ') <button class="btn" id="key-clear" style="margin-left:8px;padding:4px 10px;font-size:0.78rem">변경</button></div>';
-
     html += '<div class="section-label">경마장</div><div class="radio-row">';
     Object.keys(MEETS).forEach(function (m) {
       html += '<div class="check-item' + (m === meet ? " on" : "") + '" data-meet="' + m + '" role="button" tabindex="0">' + MEETS[m] + "</div>";
@@ -530,14 +527,6 @@
     }
     html += "</div>";
     view.innerHTML = html;
-
-    var keyClear = document.getElementById("key-clear");
-    if (keyClear) keyClear.addEventListener("click", function () {
-      if (confirm("등록된 인증키를 삭제하고 새로 입력할까요?")) {
-        try { localStorage.removeItem(KEY_STORE); } catch (e) {}
-        renderSetup();
-      }
-    });
 
     view.querySelectorAll("[data-meet]").forEach(function (el) {
       function pick() {
