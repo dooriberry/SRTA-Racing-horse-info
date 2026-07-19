@@ -231,7 +231,7 @@
   }
   var BASE = "https://apis.data.go.kr/B551015";
   var CFG_KEY = "mabang-config-v1";
-  var CACHE_KEY = "mabang-cache-v3";
+  var CACHE_KEY = "mabang-cache-v4";
   var MANUAL_KEY = "mabang-manual-v1";
   var WEIGHT_KEY = "mabang-weight-v1";
   var CACHE_TTL = 12 * 3600 * 1000;   // 12시간 지나면 자동 갱신
@@ -391,9 +391,28 @@
         if (!clinicMap[c.hrNo] || clinicMap[c.hrNo] < iso) clinicMap[c.hrNo] = iso;
       });
 
+      // 진료 기록의 소속조(part) 번호로 조교사 → 조번호를 알아낸다 (가장 많이 나온 번호 채택)
+      var hrToTr = {};
+      r[0].forEach(function (h) { hrToTr[h.hrNo] = h.trName; });
+      var partTally = {};
+      r[4].list.forEach(function (c) {
+        var tr = hrToTr[c.hrNo];
+        var p = c.part;
+        if (!tr || p == null || p === "-" || p === "") return;
+        (partTally[tr] = partTally[tr] || {})[p] = (partTally[tr][p] || 0) + 1;
+      });
+      var partMap = {};      // trName -> 조번호
+      Object.keys(partTally).forEach(function (tr) {
+        var best = null, bn = 0;
+        Object.keys(partTally[tr]).forEach(function (p) {
+          if (partTally[tr][p] > bn) { bn = partTally[tr][p]; best = p; }
+        });
+        partMap[tr] = best;
+      });
+
       cache = {
         fetchedAt: Date.now(), meet: meet, teams: teams, trainersAll: trainersAll,
-        resultMap: resultMap, shoeMap: shoeMap, clinicMap: clinicMap,
+        resultMap: resultMap, shoeMap: shoeMap, clinicMap: clinicMap, partMap: partMap,
         weekSet: weekSet, clinicOk: r[4].ok
       };
       writeJson(CACHE_KEY, cache);
@@ -431,6 +450,12 @@
     var s = shoeStatus(v.shoe ? daysAgo(v.shoe.date) : null);
     return s === "due" || s === "warn" || teethStatus(daysAgo(v.teeth)) === "warn";
   }
+  // 조 표시명: 진료 데이터에서 알아낸 조번호가 있으면 "53조", 없으면 조교사명
+  function teamNo(tr) {
+    var p = cache && cache.partMap && cache.partMap[tr];
+    return p ? p + "조" : null;
+  }
+  function teamLabel(tr) { return teamNo(tr) || tr + " 조"; }
 
   // ---------- 화면 ----------
   function setLoading(msg) {
@@ -497,8 +522,9 @@
       html += '<div class="section-label">내가 관리하는 조 선택 (여러 개 가능)</div><div class="setup-list">';
       cache.trainersAll.forEach(function (t) {
         var on = selected.indexOf(t.name) >= 0;
+        var no = teamNo(t.name);
         html += '<label class="check-item"><input type="checkbox" value="' + esc(t.name) + '"' + (on ? " checked" : "") + ">" +
-          "<span>" + esc(t.name) + ' 조</span><span class="cnt">' + t.count + "마리</span></label>";
+          "<span>" + (no ? esc(no) + " · " : "") + esc(t.name) + '</span><span class="cnt">' + t.count + "마리</span></label>";
       });
       html += '</div><div style="height:14px"></div><button class="btn primary block" id="setup-save">저장</button>';
     }
@@ -563,9 +589,9 @@
       horses.forEach(function (v) { if (needsCheck(v)) alerts++; });
       var cls = "story" + (tr === currentTeam ? " active" : "") + (alerts ? " alert" : "");
       html += '<button class="' + cls + '" data-team="' + esc(tr) + '">' +
-        '<span class="ringwrap"><span class="ring"><span class="avatar">' + esc(tr) + "</span></span>" +
+        '<span class="ringwrap"><span class="ring"><span class="avatar">' + esc(teamNo(tr) || tr) + "</span></span>" +
         (alerts ? '<span class="badge">' + alerts + "</span>" : "") + "</span>" +
-        '<span class="label">' + horses.length + "마리</span></button>";
+        '<span class="label">' + (teamNo(tr) ? esc(tr) : horses.length + "마리") + "</span></button>";
     });
     html += '<button class="story" id="story-setup">' +
       '<span class="ringwrap"><span class="ring"><span class="avatar">＋</span></span></span>' +
@@ -581,7 +607,7 @@
       return a.name.localeCompare(b.name, "ko");
     });
 
-    html += '<div class="feed-head"><h2 class="feed-title">' + esc(currentTeam || "") + " 조 · " + list.length + "마리</h2>" +
+    html += '<div class="feed-head"><h2 class="feed-title">' + esc(teamLabel(currentTeam || "")) + " · " + list.length + "마리</h2>" +
       '<span class="feed-sort">최근 경주 순</span></div>';
 
     list.forEach(function (v) {
