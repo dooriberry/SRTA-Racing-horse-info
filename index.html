@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6b4a">
+<title>마방 관리</title>
+<style>
+  :root {
+    --bg: #f4f6f4;
+    --card: #ffffff;
+    --ink: #1c2420;
+    --ink-soft: #5a6660;
+    --line: #dde4df;
+    --accent: #1f6b4a;
+    --accent-soft: #e4efe9;
+    --ok-bg: #eef2ef;
+    --ok-ink: #4a5750;
+    --warn-bg: #f7ecd8;
+    --warn-ink: #8a5f14;
+    --due-bg: #f9e4df;
+    --due-ink: #a33c2a;
+    --shadow: 0 1px 3px rgba(28, 36, 32, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141a17; --card: #1d2621; --ink: #e8ede9; --ink-soft: #97a39c;
+      --line: #2c3831; --accent: #56b184; --accent-soft: #22352b;
+      --ok-bg: #232d27; --ok-ink: #9aa8a0; --warn-bg: #383014; --warn-ink: #d9a83f;
+      --due-bg: #402019; --due-ink: #e5765f; --shadow: 0 1px 3px rgba(0,0,0,0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+      "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  .app { max-width: 480px; margin: 0 auto; padding: 0 16px 48px; }
+  header { padding: 18px 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  header h1 { font-size: 1.2rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .head-right { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink-soft);
+    padding: 6px 10px; cursor: pointer;
+  }
+  .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sync-info { font-size: 0.72rem; color: var(--ink-soft); text-align: right; margin: -6px 0 10px; font-variant-numeric: tabular-nums; min-height: 1em; }
+
+  .notice {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 12px;
+  }
+  .notice.error { border-color: var(--due-ink); color: var(--due-ink); }
+
+  .section-label {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 16px 2px 8px;
+  }
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .team-btn {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: var(--shadow); padding: 15px 14px; text-align: left; cursor: pointer;
+    font: inherit; color: inherit; display: flex; flex-direction: column; gap: 4px;
+  }
+  .team-btn:hover, .team-btn:focus-visible { border-color: var(--accent); }
+  .team-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .team-btn .name { font-size: 1.02rem; font-weight: 700; }
+  .team-btn .meta { font-size: 0.8rem; color: var(--ink-soft); }
+  .team-btn .alert { font-size: 0.75rem; font-weight: 600; color: var(--due-ink); }
+
+  .back-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 0; }
+  .back-btn {
+    background: none; border: none; color: var(--accent); font: inherit; font-weight: 600;
+    font-size: 0.9rem; cursor: pointer; padding: 8px 8px 8px 0;
+  }
+  .back-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .team-title { font-size: 1.12rem; font-weight: 700; margin: 2px 0 0; }
+
+  .horse-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden;
+  }
+  .horse-head {
+    width: 100%; background: none; border: none; font: inherit; color: inherit;
+    text-align: left; padding: 13px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 7px;
+  }
+  .horse-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .horse-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .horse-name { font-size: 1rem; font-weight: 700; }
+  .horse-name .rank { font-size: 0.75rem; font-weight: 600; color: var(--ink-soft); margin-left: 6px; }
+  .horse-weight { font-size: 0.9rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 999px;
+    background: var(--ok-bg); color: var(--ok-ink); font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .chip.due { background: var(--due-bg); color: var(--due-ink); }
+  .chip.race { background: var(--accent-soft); color: var(--accent); }
+
+  .edit-panel { border-top: 1px solid var(--line); padding: 14px; display: grid; gap: 10px; }
+  .edit-detail { font-size: 0.82rem; color: var(--ink-soft); display: grid; gap: 2px; }
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 0.75rem; font-weight: 600; color: var(--ink-soft); }
+  .field input {
+    font: inherit; font-variant-numeric: tabular-nums; padding: 9px 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%;
+  }
+  .field input:focus-visible { outline: 2px solid var(--accent); border-color: var(--accent); }
+  .btn-row { display: flex; gap: 8px; margin-top: 2px; }
+  .btn {
+    font: inherit; font-weight: 600; font-size: 0.9rem; padding: 9px 16px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
+  }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.block { width: 100%; }
+
+  .setup-list { display: grid; gap: 8px; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px; background: var(--card);
+    border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; cursor: pointer;
+  }
+  .check-item input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .check-item .cnt { margin-left: auto; font-size: 0.8rem; color: var(--ink-soft); }
+  .radio-row { display: flex; gap: 8px; }
+  .radio-row .check-item { flex: 1; justify-content: center; }
+  .radio-row .check-item.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+
+  .loading { text-align: center; color: var(--ink-soft); padding: 30px 0; font-size: 0.9rem; }
+
+  footer {
+    margin-top: 26px; padding-top: 13px; border-top: 1px solid var(--line);
+    font-size: 0.76rem; color: var(--ink-soft); display: grid; gap: 6px;
+  }
+  footer .legend { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>마방 관리</h1>
+    <div class="head-right">
+      <button class="icon-btn" id="refresh-btn">새로고침</button>
+      <button class="icon-btn" id="setup-btn">설정</button>
+    </div>
+  </header>
+  <div class="sync-info" id="sync-info"></div>
+  <main id="view"><div class="loading">불러오는 중…</div></main>
+  <footer>
+    <div class="legend">
+      기준: <span class="chip">정상</span>
+      <span class="chip warn">장제 28일↑·정치 90일↑</span>
+      <span class="chip due">장제 35일↑·정치 120일↑</span>
+    </div>
+    <div>경주일·체중·장제는 한국마사회 공공데이터에서 자동으로 가져옵니다. 정치일자는 직접 입력하거나 진료정보 연동 시 자동 표시됩니다.</div>
+  </footer>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+  // 인증키는 코드에 넣지 않는다: config.js(로컬 전용, gitignore) 또는
+  // 앱 설정 화면에서 한 번 입력받아 이 기기(localStorage)에만 저장한다.
+  var KEY_STORE = "mabang-key";
+  function getKey() {
+    if (typeof window.MABANG_KEY === "string" && window.MABANG_KEY) return window.MABANG_KEY;
+    try { return localStorage.getItem(KEY_STORE) || ""; } catch (e) { return ""; }
+  }
+  var BASE = "https://apis.data.go.kr/B551015";
+  var CFG_KEY = "mabang-config-v1";
+  var CACHE_KEY = "mabang-cache-v2";
+  var MANUAL_KEY = "mabang-manual-v1";
+  var WEIGHT_KEY = "mabang-weight-v1";
+  var CACHE_TTL = 12 * 3600 * 1000;   // 12시간 지나면 자동 갱신
+  var SHOE_LOOKBACK_DAYS = 60;        // 장제 기록 조회 범위
+  var MEETS = { "1": "서울", "2": "제주", "3": "부산경남" };
+
+  var config = readJson(CFG_KEY);     // {meet, trainers:[...]}
+  var cache = readJson(CACHE_KEY);    // {fetchedAt, meet, teams, trainersAll, resultMap, shoeMap, clinicMap, weekSet, clinicOk}
+  var manual = readJson(MANUAL_KEY) || {};   // {hrNo: {teeth}}
+  var weights = readJson(WEIGHT_KEY) || {};  // {hrNo: {w, date}}
+
+  var currentTeam = null;
+  var openHorse = null;
+  var lastError = "";
+  var syncing = false;
+  var progress = 0;
+  var setupMode = false;
+  var view = document.getElementById("view");
+
+  function readJson(k) {
+    try { var r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+  }
+  function writeJson(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function ymd(date) {
+    return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+  }
+  function numToIso(n) {
+    var s = String(n);
+    if (!/^\d{8}$/.test(s)) return null;
+    return s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8);
+  }
+  function fmt(iso) { return iso ? iso.replace(/-/g, ".") : "—"; }
+  function daysAgo(iso) {
+    if (!iso) return null;
+    var then = new Date(iso + "T00:00:00");
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.round((now - then) / 86400000);
+  }
+  function shoeStatus(d) { if (d === null) return "due"; if (d >= 35) return "due"; if (d >= 28) return "warn"; return ""; }
+  function teethStatus(d) { if (d === null) return ""; if (d >= 120) return "due"; if (d >= 90) return "warn"; return ""; }
+
+  // ---------- API ----------
+  function bumpProgress() {
+    progress++;
+    if (!cache) setLoading("마사회 데이터를 불러오는 중… (" + progress + "건 완료, 30초~1분 정도 걸립니다)");
+    else syncLabel();
+  }
+  function apiGet(path, params) {
+    var q = "serviceKey=" + getKey() + "&_type=json";
+    for (var k in params) q += "&" + k + "=" + encodeURIComponent(params[k]);
+    return fetch(BASE + path + "?" + q).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (j) {
+      var h = j && j.response && j.response.header;
+      if (!h || h.resultCode !== "00") throw new Error((h && h.resultMsg) || "API 오류");
+      bumpProgress();
+      return j.response.body;
+    });
+  }
+  function items(body) {
+    if (!body || !body.items || !body.items.item) return [];
+    var it = body.items.item;
+    return Array.isArray(it) ? it : [it];
+  }
+  // 1페이지를 받아 전체 건수를 확인한 뒤 나머지 페이지는 동시에 요청
+  function fetchAllPages(path, params, perPage, maxPages) {
+    function pageParams(n) { return Object.assign({}, params, { numOfRows: perPage, pageNo: n }); }
+    return apiGet(path, pageParams(1)).then(function (body) {
+      var first = items(body);
+      var total = Number(body.totalCount) || 0;
+      var pages = Math.min(Math.ceil(total / perPage) || 1, maxPages);
+      if (pages <= 1) return first;
+      var rest = [];
+      for (var n = 2; n <= pages; n++) rest.push(apiGet(path, pageParams(n)).then(items));
+      return Promise.all(rest).then(function (chunks) {
+        return chunks.reduce(function (acc, c) { return acc.concat(c); }, first);
+      });
+    });
+  }
+
+  function refreshData(force) {
+    if (!config || !getKey()) return Promise.resolve();
+    if (syncing) return Promise.resolve();
+    var fresh = cache && cache.meet === config.meet && (Date.now() - cache.fetchedAt) < CACHE_TTL;
+    if (fresh && !force) return Promise.resolve();
+
+    syncing = true; progress = 0;
+    if (!cache) setLoading("마사회 데이터를 불러오는 중… (30초~1분 정도 걸립니다)");
+    else syncLabel();
+
+    var meet = config.meet;
+    var today = new Date();
+    var from = new Date(); from.setDate(from.getDate() - SHOE_LOOKBACK_DAYS);
+
+    var roster = fetchAllPages("/API8_2/raceHorseInfo_2", { meet: meet }, 2000, 3);
+    var results = fetchAllPages("/API15_2/raceHorseResult_2", { meet: meet }, 2000, 4);
+    var shoes = fetchAllPages("/API191_1/HorseShoe_1",
+      { meet: meet, shoe_date_fr: ymd(from), shoe_date_to: ymd(today) }, 2000, 4);
+    var week = fetchAllPages("/trcweekentry_1/gettrcweekentry_1", { meet: meet }, 1000, 2)
+      .catch(function () { return []; });
+    // 진료 API는 한 번에 최대 1000건까지만 응답함. 전체 보관분이 약 3개월치라 넉넉히 받는다.
+    var clinic = fetchAllPages("/API16_1/raceHorseClinic_1", { meet: meet }, 1000, 15)
+      .then(function (list) { return { ok: true, list: list }; })
+      .catch(function () { return { ok: false, list: [] }; });
+
+    return Promise.all([roster, results, shoes, week, clinic]).then(function (r) {
+      var teams = {};        // trName -> [{hrNo, name, rank}]
+      r[0].forEach(function (h) {
+        (teams[h.trName] = teams[h.trName] || []).push({ hrNo: h.hrNo, name: h.hrName, rank: h.rank });
+      });
+      var trainersAll = Object.keys(teams).sort(function (a, b) { return a.localeCompare(b, "ko"); })
+        .map(function (t) { return { name: t, count: teams[t].length }; });
+
+      var resultMap = {};    // hrNo -> {race}
+      r[1].forEach(function (h) {
+        var race = numToIso(h.recentRcDate);
+        resultMap[h.hrNo] = { race: race };
+        var w = Number(h.recentWgHr) || 0;
+        if (w > 0) weights[h.hrNo] = { w: w, date: race };
+      });
+      writeJson(WEIGHT_KEY, weights);
+
+      var shoeMap = {};      // hrNo -> {date, type}
+      r[2].forEach(function (s) {
+        var iso = numToIso(s.shoeDate);
+        if (!iso) return;
+        var n = String(s.amt1Name || "");
+        var type = n.indexOf("삭제") >= 0 ? "삭제" : (n.indexOf("정타") >= 0 ? "정타" : "장제");
+        if (!shoeMap[s.hrNo] || shoeMap[s.hrNo].date < iso) shoeMap[s.hrNo] = { date: iso, type: type };
+      });
+
+      var weekSet = {};
+      r[3].forEach(function (w) { weekSet[w.hrNo] = true; });
+
+      var clinicMap = {};    // hrNo -> 최근 '정치' 진료일
+      r[4].list.forEach(function (c) {
+        var txt = String(c.illName1 || "") + " " + String(c.illName2 || "");
+        if (txt.indexOf("정치") < 0) return;
+        var iso = numToIso(c.clinicDate);
+        if (!iso) return;
+        if (!clinicMap[c.hrNo] || clinicMap[c.hrNo] < iso) clinicMap[c.hrNo] = iso;
+      });
+
+      cache = {
+        fetchedAt: Date.now(), meet: meet, teams: teams, trainersAll: trainersAll,
+        resultMap: resultMap, shoeMap: shoeMap, clinicMap: clinicMap,
+        weekSet: weekSet, clinicOk: r[4].ok
+      };
+      writeJson(CACHE_KEY, cache);
+      lastError = "";
+    }).catch(function (e) {
+      lastError = "데이터를 불러오지 못했습니다: " + e.message + (cache ? " (이전 데이터를 표시합니다)" : "");
+    }).then(function () {
+      syncing = false;
+    });
+  }
+
+  // ---------- 파생 데이터 ----------
+  function horseTeeth(hrNo) {
+    var m = manual[hrNo] && manual[hrNo].teeth;
+    var c = cache && cache.clinicMap[hrNo];
+    if (m && c) return m > c ? m : c;
+    return m || c || null;
+  }
+  function horseView(h) {
+    var res = (cache && cache.resultMap[h.hrNo]) || {};
+    var w = weights[h.hrNo] ? weights[h.hrNo].w : null;
+    return {
+      hrNo: h.hrNo, name: h.name, rank: h.rank, weight: w,
+      race: res.race || null,
+      shoe: (cache && cache.shoeMap[h.hrNo]) || null,
+      teeth: horseTeeth(h.hrNo),
+      thisWeek: !!(cache && cache.weekSet[h.hrNo])
+    };
+  }
+  function needsCheck(v) {
+    return !!(shoeStatus(v.shoe ? daysAgo(v.shoe.date) : null) === "due" ||
+      shoeStatus(v.shoe ? daysAgo(v.shoe.date) : null) === "warn" ||
+      teethStatus(daysAgo(v.teeth)));
+  }
+
+  // ---------- 화면 ----------
+  function setLoading(msg) {
+    view.innerHTML = '<div class="loading">' + esc(msg) + "</div>";
+  }
+  function syncLabel() {
+    var el = document.getElementById("sync-info");
+    var txt = "";
+    if (cache) {
+      var d = new Date(cache.fetchedAt);
+      txt = MEETS[cache.meet] + " · 데이터 기준 " + (d.getMonth() + 1) + "/" + d.getDate() + " " +
+        String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    }
+    if (syncing) txt += (txt ? " · " : "") + "갱신 중…";
+    el.textContent = txt;
+  }
+  function noticeHtml() {
+    var html = "";
+    if (lastError) html += '<div class="notice error">' + esc(lastError) + "</div>";
+    if (cache && !cache.clinicOk) {
+      html += '<div class="notice">진료정보 API가 아직 연결되지 않아 정치일자는 직접 입력해야 합니다. ' +
+        "공공데이터포털에서 ‘마필진료 정보’ 활용신청 후 새로고침하면 자동으로 연동됩니다.</div>";
+    }
+    return html;
+  }
+
+  function renderSetup() {
+    setupMode = true;
+    var meet = (config && config.meet) || "1";
+    var key = getKey();
+    var html = "";
+
+    // 인증키 입력 (공공데이터포털에서 발급받은 일반 인증키)
+    html += '<div class="section-label">공공데이터포털 인증키</div>';
+    if (!key) {
+      html += '<div class="notice">마사회 데이터를 불러오려면 공공데이터포털(data.go.kr)에서 발급받은 ' +
+        "일반 인증키를 한 번만 입력해주세요. 이 기기에만 저장됩니다.</div>" +
+        '<div class="field"><input id="f-key" type="text" placeholder="인증키 붙여넣기" autocomplete="off"></div>' +
+        '<div style="height:10px"></div><button class="btn primary block" id="key-save">인증키 저장</button>';
+      view.innerHTML = html;
+      document.getElementById("key-save").addEventListener("click", function () {
+        var v = document.getElementById("f-key").value.trim();
+        if (v.length < 20) { alert("인증키가 너무 짧습니다. 공공데이터포털 마이페이지의 일반 인증키를 그대로 붙여넣어 주세요."); return; }
+        try { localStorage.setItem(KEY_STORE, v); } catch (e) {}
+        refreshData(true).then(function () { if (setupMode) renderSetup(); });
+        renderSetup();
+      });
+      return;
+    }
+    html += '<div class="notice">인증키 등록됨 (끝 4자리 …' + esc(key.slice(-4)) +
+      ') <button class="icon-btn" id="key-clear" style="margin-left:8px">변경</button></div>';
+
+    html += '<div class="section-label">경마장</div><div class="radio-row">';
+    Object.keys(MEETS).forEach(function (m) {
+      html += '<div class="check-item' + (m === meet ? " on" : "") + '" data-meet="' + m + '" role="button" tabindex="0">' + MEETS[m] + "</div>";
+    });
+    html += "</div>";
+
+    var ready = cache && cache.meet === meet;
+    if (!ready) {
+      html += '<div class="loading">조 목록을 불러오는 중입니다… (30초~1분)</div>';
+    } else {
+      var selected = (config && config.trainers) || [];
+      html += '<div class="section-label">내가 관리하는 조 선택 (여러 개 가능)</div><div class="setup-list">';
+      cache.trainersAll.forEach(function (t) {
+        var on = selected.indexOf(t.name) >= 0;
+        html += '<label class="check-item"><input type="checkbox" value="' + esc(t.name) + '"' + (on ? " checked" : "") + ">" +
+          "<span>" + esc(t.name) + ' 조</span><span class="cnt">' + t.count + "마리</span></label>";
+      });
+      html += '</div><div style="height:14px"></div><button class="btn primary block" id="setup-save">저장</button>';
+    }
+    view.innerHTML = html;
+
+    var keyClear = document.getElementById("key-clear");
+    if (keyClear) keyClear.addEventListener("click", function () {
+      if (confirm("등록된 인증키를 삭제하고 새로 입력할까요?")) {
+        try { localStorage.removeItem(KEY_STORE); } catch (e) {}
+        renderSetup();
+      }
+    });
+
+    view.querySelectorAll("[data-meet]").forEach(function (el) {
+      function pick() {
+        var m = el.getAttribute("data-meet");
+        if (config.meet !== m) {
+          config.meet = m;
+          config.trainers = [];
+          writeJson(CFG_KEY, config);
+          refreshData(true).then(function () { if (setupMode) renderSetup(); });
+        }
+        renderSetup();
+      }
+      el.addEventListener("click", pick);
+      el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+    });
+
+    var saveBtn = document.getElementById("setup-save");
+    if (saveBtn) saveBtn.addEventListener("click", function () {
+      var picked = [];
+      view.querySelectorAll('input[type="checkbox"]:checked').forEach(function (c) { picked.push(c.value); });
+      if (!picked.length) { alert("조를 하나 이상 선택해주세요."); return; }
+      config.trainers = picked;
+      writeJson(CFG_KEY, config);
+      setupMode = false;
+      currentTeam = null;
+      render();
+    });
+  }
+
+  function renderHome() {
+    var html = noticeHtml() + '<div class="section-label">조 선택</div><div class="team-grid">';
+    (config.trainers || []).forEach(function (tr) {
+      var horses = (cache && cache.teams[tr]) || [];
+      var alerts = 0;
+      horses.forEach(function (h) { if (needsCheck(horseView(h))) alerts++; });
+      html += '<button class="team-btn" data-team="' + esc(tr) + '">' +
+        '<span class="name">' + esc(tr) + " 조</span>" +
+        '<span class="meta">' + horses.length + "마리</span>" +
+        (alerts ? '<span class="alert">확인 필요 ' + alerts + "마리</span>" : "") +
+        "</button>";
+    });
+    html += "</div>";
+    view.innerHTML = html;
+    view.querySelectorAll(".team-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        currentTeam = btn.getAttribute("data-team");
+        openHorse = null;
+        render();
+      });
+    });
+  }
+
+  function chip(label, iso, statusFn) {
+    var d = daysAgo(iso);
+    var cls = statusFn ? statusFn(d) : "";
+    var text = label + " " + fmt(iso) + (d !== null ? " (" + d + "일 전)" : "");
+    return '<span class="chip ' + cls + '">' + esc(text) + "</span>";
+  }
+
+  function renderTeam(tr) {
+    var horses = ((cache && cache.teams[tr]) || []).map(horseView);
+    horses.sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); });
+
+    var html = noticeHtml() +
+      '<div class="back-row"><button class="back-btn" id="back-btn">← 조 목록</button></div>' +
+      '<h2 class="team-title">' + esc(tr) + " 조 · " + horses.length + "마리</h2>" +
+      '<div class="section-label">말 목록 (누르면 상세·정치일자 입력)</div>';
+
+    horses.forEach(function (v) {
+      var shoeChip;
+      if (v.shoe) shoeChip = chip(v.shoe.type, v.shoe.date, shoeStatus);
+      else shoeChip = '<span class="chip due">장제 ' + SHOE_LOOKBACK_DAYS + "일↑</span>";
+      html += '<div class="horse-card"><button class="horse-head" data-horse="' + esc(v.hrNo) + '">' +
+        '<div class="horse-top"><span class="horse-name">' + esc(v.name) +
+        (v.rank ? '<span class="rank">' + esc(v.rank) + "</span>" : "") + "</span>" +
+        '<span class="horse-weight">' + (v.weight ? v.weight + " kg" : "체중 —") + "</span></div>" +
+        '<div class="chip-row">' +
+        (v.thisWeek ? '<span class="chip race">금주 출전</span>' : "") +
+        '<span class="chip race">경주 ' + esc(fmt(v.race)) +
+          (daysAgo(v.race) !== null ? " (" + daysAgo(v.race) + "일 전)" : "") + "</span>" +
+        shoeChip +
+        chip("정치", v.teeth, teethStatus) +
+        "</div></button>";
+
+      if (openHorse === v.hrNo) {
+        html += '<div class="edit-panel">' +
+          '<div class="edit-detail">' +
+          "<span>마번 " + esc(v.hrNo) + (v.rank ? " · 등급 " + esc(v.rank) : "") + "</span>" +
+          (v.weight && weights[v.hrNo] && weights[v.hrNo].date ?
+            "<span>체중 " + v.weight + "kg (" + esc(fmt(weights[v.hrNo].date)) + " 계측)</span>" : "") +
+          "</div>" +
+          '<div class="field"><label for="f-teeth">정치일자 (직접 입력)</label>' +
+          '<input id="f-teeth" type="date" value="' + esc((manual[v.hrNo] && manual[v.hrNo].teeth) || "") + '"></div>' +
+          '<div class="btn-row"><button class="btn primary" id="save-horse">저장</button>' +
+          '<button class="btn" id="close-edit">닫기</button></div></div>';
+      }
+      html += "</div>";
+    });
+
+    view.innerHTML = html;
+    document.getElementById("back-btn").addEventListener("click", function () {
+      currentTeam = null; openHorse = null; render();
+    });
+    view.querySelectorAll(".horse-head").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var no = btn.getAttribute("data-horse");
+        openHorse = openHorse === no ? null : no;
+        render();
+      });
+    });
+    var saveBtn = document.getElementById("save-horse");
+    if (saveBtn) saveBtn.addEventListener("click", function () {
+      var val = document.getElementById("f-teeth").value;
+      if (val) manual[openHorse] = { teeth: val };
+      else delete manual[openHorse];
+      writeJson(MANUAL_KEY, manual);
+      openHorse = null; render();
+    });
+    var closeBtn = document.getElementById("close-edit");
+    if (closeBtn) closeBtn.addEventListener("click", function () { openHorse = null; render(); });
+  }
+
+  function render() {
+    syncLabel();
+    if (setupMode) { renderSetup(); return; }
+    if (!config || !config.trainers || !config.trainers.length) { renderSetup(); return; }
+    if (!cache) { setLoading("마사회 데이터를 불러오는 중… (30초~1분 정도 걸립니다)"); return; }
+    if (currentTeam) { renderTeam(currentTeam); return; }
+    renderHome();
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById("refresh-btn").addEventListener("click", function () {
+    refreshData(true).then(function () {
+      if (openHorse === null) render(); else syncLabel();
+    });
+    syncLabel();
+  });
+  document.getElementById("setup-btn").addEventListener("click", function () {
+    currentTeam = null; openHorse = null; renderSetup();
+  });
+
+  // 시작: 캐시가 있으면 즉시 표시하고 뒤에서 갱신
+  if (!config) { config = { meet: "1", trainers: [] }; writeJson(CFG_KEY, config); }
+  render();
+  refreshData(false).then(function () {
+    if (openHorse === null) render(); else syncLabel();
+  });
+})();
+</script>
+</body>
+</html>
