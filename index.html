@@ -3,38 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1f6b4a">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>마방 관리</title>
 <style>
   :root {
-    --bg: #f4f6f4;
+    --bg: #fafafa;
     --card: #ffffff;
-    --ink: #1c2420;
-    --ink-soft: #5a6660;
-    --line: #dde4df;
-    --accent: #1f6b4a;
-    --accent-soft: #e4efe9;
-    --ok-bg: #eef2ef;
-    --ok-ink: #4a5750;
-    --warn-bg: #f7ecd8;
-    --warn-ink: #8a5f14;
-    --due-bg: #f9e4df;
-    --due-ink: #a33c2a;
-    --info-bg: #e1ecf7;
-    --info-ink: #2a5e8f;
-    --shadow: 0 1px 3px rgba(28, 36, 32, 0.08);
+    --ink: #262626;
+    --ink-soft: #8e8e8e;
+    --line: #dbdbdb;
+    --accent: #0095f6;
+    --accent-soft: #e5f3ff;
+    --ok-bg: #f0f0f0;
+    --ok-ink: #737373;
+    --warn-bg: #fff3dc;
+    --warn-ink: #a36a00;
+    --due-bg: #ffe9e8;
+    --due-ink: #ed4956;
+    --info-bg: #e5f3ff;
+    --info-ink: #0077cc;
+    --story-alert: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #141a17; --card: #1d2621; --ink: #e8ede9; --ink-soft: #97a39c;
-      --line: #2c3831; --accent: #56b184; --accent-soft: #22352b;
-      --ok-bg: #232d27; --ok-ink: #9aa8a0; --warn-bg: #383014; --warn-ink: #d9a83f;
-      --due-bg: #402019; --due-ink: #e5765f;
-      --info-bg: #1b2c3d; --info-ink: #74aede;
-      --shadow: 0 1px 3px rgba(0,0,0,0.35);
+      --bg: #000000; --card: #0e0e0e; --ink: #f5f5f5; --ink-soft: #a8a8a8;
+      --line: #262626; --accent: #0095f6; --accent-soft: #062c44;
+      --ok-bg: #1c1c1c; --ok-ink: #a8a8a8;
+      --warn-bg: #2b2000; --warn-ink: #ffb84d;
+      --due-bg: #2e0f0d; --due-ink: #ff6b62;
+      --info-bg: #04263d; --info-ink: #4db5ff;
     }
   }
   * { box-sizing: border-box; }
@@ -42,68 +42,110 @@
   body {
     background: var(--bg); color: var(--ink);
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
-      "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+      "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
     line-height: 1.5; -webkit-font-smoothing: antialiased;
   }
-  .app { max-width: 480px; margin: 0 auto; padding: 0 16px 48px; }
-  header { padding: 18px 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  header h1 { font-size: 1.2rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
-  .head-right { display: flex; align-items: center; gap: 8px; }
-  .icon-btn {
-    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
-    font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink-soft);
-    padding: 6px 10px; cursor: pointer;
+  .app { max-width: 480px; margin: 0 auto; padding: 0 0 48px; }
+
+  /* 상단 바 — 인스타 헤더 느낌 */
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border-bottom: 1px solid var(--line);
+    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
   }
-  .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .sync-info { font-size: 0.72rem; color: var(--ink-soft); text-align: right; margin: -6px 0 10px; font-variant-numeric: tabular-nums; min-height: 1em; }
+  header h1 { font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: -0.03em; }
+  .head-right { display: flex; align-items: center; gap: 4px; }
+  .icon-btn {
+    background: none; border: none; border-radius: 50%;
+    width: 38px; height: 38px; font-size: 1.15rem; color: var(--ink);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: var(--ok-bg); }
+  .icon-btn:focus-visible { outline: 2px solid var(--accent); }
+  .sync-info {
+    font-size: 0.72rem; color: var(--ink-soft); text-align: center;
+    padding: 6px 16px 0; font-variant-numeric: tabular-nums; min-height: 1.4em;
+  }
+
+  /* 스토리 줄 — 조 선택 */
+  .stories {
+    display: flex; gap: 14px; overflow-x: auto; padding: 12px 16px 4px;
+    scrollbar-width: none;
+  }
+  .stories::-webkit-scrollbar { display: none; }
+  .story {
+    background: none; border: none; padding: 0; font: inherit; color: inherit;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center;
+    gap: 5px; flex: 0 0 auto; width: 72px;
+  }
+  .story:focus-visible { outline: 2px solid var(--accent); border-radius: 12px; }
+  .story .ringwrap { position: relative; display: block; }
+  .story .ring {
+    display: flex; width: 66px; height: 66px; border-radius: 50%; padding: 3px;
+    background: var(--line);
+  }
+  .story.alert .ring { background: var(--story-alert); }
+  .story.active .ring { background: var(--accent); }
+  .story .avatar {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--card); border: 2px solid var(--card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .story .badge {
+    position: absolute; top: -2px; right: -2px;
+    background: #ed4956; color: #fff; font-size: 0.68rem; font-weight: 700;
+    min-width: 19px; height: 19px; border-radius: 999px;
+    display: flex; align-items: center; justify-content: center; padding: 0 5px;
+    border: 2px solid var(--bg);
+  }
+  .story .label {
+    font-size: 0.72rem; color: var(--ink-soft); max-width: 72px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .story.active .label { color: var(--ink); font-weight: 700; }
+
+  .feed-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 10px 16px 6px;
+  }
+  .feed-title { font-size: 1.02rem; font-weight: 800; margin: 0; }
+  .feed-sort { font-size: 0.72rem; color: var(--ink-soft); }
 
   .notice {
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    padding: 12px 14px; font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 12px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-size: 0.83rem; color: var(--ink-soft); margin: 8px 16px;
   }
   .notice.error { border-color: var(--due-ink); color: var(--due-ink); }
 
-  .section-label {
-    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-soft); margin: 16px 2px 8px;
-  }
-  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .team-btn {
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    box-shadow: var(--shadow); padding: 15px 14px; text-align: left; cursor: pointer;
-    font: inherit; color: inherit; display: flex; flex-direction: column; gap: 4px;
-  }
-  .team-btn:hover, .team-btn:focus-visible { border-color: var(--accent); }
-  .team-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .team-btn .name { font-size: 1.02rem; font-weight: 700; }
-  .team-btn .meta { font-size: 0.8rem; color: var(--ink-soft); }
-  .team-btn .alert { font-size: 0.75rem; font-weight: 600; color: var(--due-ink); }
-
-  .back-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 0; }
-  .back-btn {
-    background: none; border: none; color: var(--accent); font: inherit; font-weight: 600;
-    font-size: 0.9rem; cursor: pointer; padding: 8px 8px 8px 0;
-  }
-  .back-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-  .team-title { font-size: 1.12rem; font-weight: 700; margin: 2px 0 0; }
-
+  /* 피드 카드 */
   .horse-card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    margin: 0 16px 12px; overflow: hidden;
   }
   .horse-head {
     width: 100%; background: none; border: none; font: inherit; color: inherit;
-    text-align: left; padding: 13px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 7px;
+    text-align: left; padding: 12px 14px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 9px;
   }
   .horse-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-  .horse-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .horse-name { font-size: 1rem; font-weight: 700; }
-  .horse-name .rank { font-size: 0.75rem; font-weight: 600; color: var(--ink-soft); margin-left: 6px; }
-  .horse-weight { font-size: 0.9rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .horse-top { display: flex; align-items: center; gap: 10px; }
+  .horse-avatar {
+    width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto;
+    background: var(--ok-bg); color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 700;
+  }
+  .horse-id { min-width: 0; }
+  .horse-name { font-size: 0.98rem; font-weight: 700; line-height: 1.25; }
+  .horse-sub { font-size: 0.75rem; color: var(--ink-soft); }
+  .horse-weight { margin-left: auto; font-size: 0.95rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .horse-weight small { font-weight: 400; color: var(--ink-soft); }
   .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
-    font-size: 0.75rem; font-weight: 600; padding: 3px 8px; border-radius: 999px;
-    background: var(--ok-bg); color: var(--ok-ink); font-variant-numeric: tabular-nums; white-space: nowrap;
+    font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+    background: var(--ok-bg); color: var(--ok-ink);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
   .chip.due { background: var(--due-bg); color: var(--due-ink); }
@@ -115,23 +157,29 @@
   .field { display: grid; gap: 4px; }
   .field label { font-size: 0.75rem; font-weight: 600; color: var(--ink-soft); }
   .field input {
-    font: inherit; font-variant-numeric: tabular-nums; padding: 9px 10px;
-    border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%;
+    font: inherit; font-variant-numeric: tabular-nums; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); width: 100%;
   }
   .field input:focus-visible { outline: 2px solid var(--accent); border-color: var(--accent); }
   .btn-row { display: flex; gap: 8px; margin-top: 2px; }
   .btn {
-    font: inherit; font-weight: 600; font-size: 0.9rem; padding: 9px 16px; border-radius: 8px;
+    font: inherit; font-weight: 700; font-size: 0.88rem; padding: 9px 18px; border-radius: 10px;
     border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
   }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .btn.block { width: 100%; }
 
+  /* 설정 화면 */
+  .setup { padding: 4px 16px; }
+  .section-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 18px 2px 8px;
+  }
   .setup-list { display: grid; gap: 8px; }
   .check-item {
     display: flex; align-items: center; gap: 10px; background: var(--card);
-    border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; cursor: pointer;
   }
   .check-item input { width: 18px; height: 18px; accent-color: var(--accent); }
   .check-item .cnt { margin-left: auto; font-size: 0.8rem; color: var(--ink-soft); }
@@ -139,11 +187,11 @@
   .radio-row .check-item { flex: 1; justify-content: center; }
   .radio-row .check-item.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
 
-  .loading { text-align: center; color: var(--ink-soft); padding: 30px 0; font-size: 0.9rem; }
+  .loading { text-align: center; color: var(--ink-soft); padding: 34px 16px; font-size: 0.9rem; }
 
   footer {
-    margin-top: 26px; padding-top: 13px; border-top: 1px solid var(--line);
-    font-size: 0.76rem; color: var(--ink-soft); display: grid; gap: 6px;
+    margin: 26px 16px 0; padding-top: 13px; border-top: 1px solid var(--line);
+    font-size: 0.75rem; color: var(--ink-soft); display: grid; gap: 6px;
   }
   footer .legend { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -154,8 +202,8 @@
   <header>
     <h1>마방 관리</h1>
     <div class="head-right">
-      <button class="icon-btn" id="refresh-btn">새로고침</button>
-      <button class="icon-btn" id="setup-btn">설정</button>
+      <button class="icon-btn" id="refresh-btn" aria-label="데이터 새로고침" title="새로고침">&#x21bb;</button>
+      <button class="icon-btn" id="setup-btn" aria-label="설정" title="설정">&#x2699;&#xfe0e;</button>
     </div>
   </header>
   <div class="sync-info" id="sync-info"></div>
@@ -166,7 +214,7 @@
       <span class="chip due">장제 30일↑</span>
       <span class="chip info">정치 6개월 미만</span>
     </div>
-    <div>경주일·체중·장제는 한국마사회 공공데이터에서 자동으로 가져옵니다. 정치일자는 직접 입력하거나 진료정보 연동 시 자동 표시됩니다.</div>
+    <div>경주일·체중·장제·정타는 한국마사회 공공데이터에서 자동으로 가져옵니다. 정치일자는 진료 기록(최근 2개월분)으로 자동 표시되며, 그 이전 것은 직접 입력해주세요.</div>
   </footer>
 </div>
 
@@ -293,7 +341,7 @@
       { meet: meet, shoe_date_fr: ymd(from), shoe_date_to: ymd(today) }, 2000, 4);
     var week = fetchAllPages("/trcweekentry_1/gettrcweekentry_1", { meet: meet }, 1000, 2)
       .catch(function () { return []; });
-    // 진료 API는 한 번에 최대 1000건까지만 응답함. 전체 보관분이 약 3개월치라 넉넉히 받는다.
+    // 진료 API는 한 번에 최대 1000건까지만 응답함. 전체 보관분이 약 2개월치라 넉넉히 받는다.
     var clinic = fetchAllPages("/API16_1/raceHorseClinic_1", { meet: meet }, 1000, 15)
       .then(function (list) { return { ok: true, list: list }; })
       .catch(function () { return { ok: false, list: [] }; });
@@ -413,15 +461,15 @@
     setupMode = true;
     var meet = (config && config.meet) || "1";
     var key = getKey();
-    var html = "";
+    var html = '<div class="setup">';
 
     // 인증키 입력 (공공데이터포털에서 발급받은 일반 인증키)
     html += '<div class="section-label">공공데이터포털 인증키</div>';
     if (!key) {
-      html += '<div class="notice">마사회 데이터를 불러오려면 공공데이터포털(data.go.kr)에서 발급받은 ' +
+      html += '<div class="notice" style="margin:8px 0">마사회 데이터를 불러오려면 공공데이터포털(data.go.kr)에서 발급받은 ' +
         "일반 인증키를 한 번만 입력해주세요. 이 기기에만 저장됩니다.</div>" +
         '<div class="field"><input id="f-key" type="text" placeholder="인증키 붙여넣기" autocomplete="off"></div>' +
-        '<div style="height:10px"></div><button class="btn primary block" id="key-save">인증키 저장</button>';
+        '<div style="height:10px"></div><button class="btn primary block" id="key-save">인증키 저장</button></div>';
       view.innerHTML = html;
       document.getElementById("key-save").addEventListener("click", function () {
         var v = document.getElementById("f-key").value.trim();
@@ -432,8 +480,8 @@
       });
       return;
     }
-    html += '<div class="notice">인증키 등록됨 (끝 4자리 …' + esc(key.slice(-4)) +
-      ') <button class="icon-btn" id="key-clear" style="margin-left:8px">변경</button></div>';
+    html += '<div class="notice" style="margin:8px 0">인증키 등록됨 (끝 4자리 …' + esc(key.slice(-4)) +
+      ') <button class="btn" id="key-clear" style="margin-left:8px;padding:4px 10px;font-size:0.78rem">변경</button></div>';
 
     html += '<div class="section-label">경마장</div><div class="radio-row">';
     Object.keys(MEETS).forEach(function (m) {
@@ -454,6 +502,7 @@
       });
       html += '</div><div style="height:14px"></div><button class="btn primary block" id="setup-save">저장</button>';
     }
+    html += "</div>";
     view.innerHTML = html;
 
     var keyClear = document.getElementById("key-clear");
@@ -492,29 +541,6 @@
     });
   }
 
-  function renderHome() {
-    var html = noticeHtml() + '<div class="section-label">조 선택</div><div class="team-grid">';
-    (config.trainers || []).forEach(function (tr) {
-      var horses = (cache && cache.teams[tr]) || [];
-      var alerts = 0;
-      horses.forEach(function (h) { if (needsCheck(horseView(h))) alerts++; });
-      html += '<button class="team-btn" data-team="' + esc(tr) + '">' +
-        '<span class="name">' + esc(tr) + " 조</span>" +
-        '<span class="meta">' + horses.length + "마리</span>" +
-        (alerts ? '<span class="alert">확인 필요 ' + alerts + "마리</span>" : "") +
-        "</button>";
-    });
-    html += "</div>";
-    view.innerHTML = html;
-    view.querySelectorAll(".team-btn").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        currentTeam = btn.getAttribute("data-team");
-        openHorse = null;
-        render();
-      });
-    });
-  }
-
   function chip(label, iso, statusFn) {
     var d = daysAgo(iso);
     var cls = statusFn ? statusFn(d) : "";
@@ -522,26 +548,56 @@
     return '<span class="chip ' + cls + '">' + esc(text) + "</span>";
   }
 
-  function renderTeam(tr) {
-    var horses = ((cache && cache.teams[tr]) || []).map(horseView);
-    horses.sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); });
+  // 스토리 줄 + 피드 (인스타그램 스타일)
+  function renderFeed() {
+    var trainers = config.trainers || [];
+    if (currentTeam === null || trainers.indexOf(currentTeam) < 0) currentTeam = trainers[0] || null;
 
-    var html = noticeHtml() +
-      '<div class="back-row"><button class="back-btn" id="back-btn">← 조 목록</button></div>' +
-      '<h2 class="team-title">' + esc(tr) + " 조 · " + horses.length + "마리</h2>" +
-      '<div class="section-label">말 목록 (누르면 상세·정치일자 입력)</div>';
+    var html = noticeHtml();
 
-    horses.forEach(function (v) {
+    // 조 스토리
+    html += '<div class="stories">';
+    trainers.forEach(function (tr) {
+      var horses = ((cache && cache.teams[tr]) || []).map(horseView);
+      var alerts = 0;
+      horses.forEach(function (v) { if (needsCheck(v)) alerts++; });
+      var cls = "story" + (tr === currentTeam ? " active" : "") + (alerts ? " alert" : "");
+      html += '<button class="' + cls + '" data-team="' + esc(tr) + '">' +
+        '<span class="ringwrap"><span class="ring"><span class="avatar">' + esc(tr) + "</span></span>" +
+        (alerts ? '<span class="badge">' + alerts + "</span>" : "") + "</span>" +
+        '<span class="label">' + horses.length + "마리</span></button>";
+    });
+    html += '<button class="story" id="story-setup">' +
+      '<span class="ringwrap"><span class="ring"><span class="avatar">＋</span></span></span>' +
+      '<span class="label">조 관리</span></button>';
+    html += "</div>";
+
+    // 피드
+    var list = ((cache && cache.teams[currentTeam]) || []).map(horseView);
+    // 직전 경주일이 최신인 말부터, 경주 기록 없는 말은 뒤로
+    list.sort(function (a, b) {
+      var ra = a.race || "", rb = b.race || "";
+      if (ra !== rb) return rb < ra ? -1 : 1;
+      return a.name.localeCompare(b.name, "ko");
+    });
+
+    html += '<div class="feed-head"><h2 class="feed-title">' + esc(currentTeam || "") + " 조 · " + list.length + "마리</h2>" +
+      '<span class="feed-sort">최근 경주 순</span></div>';
+
+    list.forEach(function (v) {
       var shoeChip;
       if (v.shoe) shoeChip = chip(v.shoe.type, v.shoe.date, shoeStatus);
       else shoeChip = '<span class="chip due">장제 ' + SHOE_LOOKBACK_DAYS + "일↑</span>";
       if (v.jeonta) shoeChip += chip("정타", v.jeonta, null);
+
       html += '<div class="horse-card"><button class="horse-head" data-horse="' + esc(v.hrNo) + '">' +
-        '<div class="horse-top"><span class="horse-name">' + esc(v.name) +
-        (v.rank ? '<span class="rank">' + esc(v.rank) + "</span>" : "") + "</span>" +
-        '<span class="horse-weight">' + (v.weight ? v.weight + " kg" : "체중 —") + "</span></div>" +
+        '<div class="horse-top">' +
+        '<span class="horse-avatar">' + esc(v.name.charAt(0)) + "</span>" +
+        '<span class="horse-id"><div class="horse-name">' + esc(v.name) + "</div>" +
+        '<div class="horse-sub">' + esc(v.rank || "") + (v.thisWeek ? " · 금주 출전" : "") + "</div></span>" +
+        '<span class="horse-weight">' + (v.weight ? v.weight + "<small> kg</small>" : '<small>체중 —</small>') + "</span>" +
+        "</div>" +
         '<div class="chip-row">' +
-        (v.thisWeek ? '<span class="chip race">금주 출전</span>' : "") +
         '<span class="chip race">경주 ' + esc(fmt(v.race)) +
           (daysAgo(v.race) !== null ? " (" + daysAgo(v.race) + "일 전)" : "") + "</span>" +
         shoeChip +
@@ -564,9 +620,19 @@
     });
 
     view.innerHTML = html;
-    document.getElementById("back-btn").addEventListener("click", function () {
-      currentTeam = null; openHorse = null; render();
+
+    view.querySelectorAll(".story[data-team]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        currentTeam = btn.getAttribute("data-team");
+        openHorse = null;
+        render();
+      });
     });
+    var setupStory = document.getElementById("story-setup");
+    if (setupStory) setupStory.addEventListener("click", function () {
+      openHorse = null; renderSetup();
+    });
+
     view.querySelectorAll(".horse-head").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var no = btn.getAttribute("data-horse");
@@ -591,9 +657,7 @@
     if (setupMode) { renderSetup(); return; }
     if (!config || !config.trainers || !config.trainers.length) { renderSetup(); return; }
     if (!cache) { setLoading("마사회 데이터를 불러오는 중… (30초~1분 정도 걸립니다)"); return; }
-    if (currentTeam) { renderTeam(currentTeam); return; }
-    renderHome();
-    window.scrollTo(0, 0);
+    renderFeed();
   }
 
   document.getElementById("refresh-btn").addEventListener("click", function () {
@@ -603,7 +667,7 @@
     syncLabel();
   });
   document.getElementById("setup-btn").addEventListener("click", function () {
-    currentTeam = null; openHorse = null; renderSetup();
+    openHorse = null; renderSetup();
   });
 
   // 시작: 캐시가 있으면 즉시 표시하고 뒤에서 갱신
