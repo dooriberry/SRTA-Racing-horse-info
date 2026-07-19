@@ -183,7 +183,7 @@
   }
   var BASE = "https://apis.data.go.kr/B551015";
   var CFG_KEY = "mabang-config-v1";
-  var CACHE_KEY = "mabang-cache-v2";
+  var CACHE_KEY = "mabang-cache-v3";
   var MANUAL_KEY = "mabang-manual-v1";
   var WEIGHT_KEY = "mabang-weight-v1";
   var CACHE_TTL = 12 * 3600 * 1000;   // 12시간 지나면 자동 갱신
@@ -315,13 +315,20 @@
       });
       writeJson(WEIGHT_KEY, weights);
 
-      var shoeMap = {};      // hrNo -> {date, type}
+      // 본장제(장제·삭제)와 정타를 구분해서 각각 최신 날짜를 보관.
+      // 색깔 판정은 본장제 기준, 정타는 참고용으로 별도 표시한다.
+      var shoeMap = {};      // hrNo -> {shoe: {date, type}, jeonta: date}
       r[2].forEach(function (s) {
         var iso = numToIso(s.shoeDate);
         if (!iso) return;
         var n = String(s.amt1Name || "");
-        var type = n.indexOf("삭제") >= 0 ? "삭제" : (n.indexOf("정타") >= 0 ? "정타" : "장제");
-        if (!shoeMap[s.hrNo] || shoeMap[s.hrNo].date < iso) shoeMap[s.hrNo] = { date: iso, type: type };
+        var e = shoeMap[s.hrNo] = shoeMap[s.hrNo] || { shoe: null, jeonta: null };
+        if (n.indexOf("정타") >= 0) {
+          if (!e.jeonta || e.jeonta < iso) e.jeonta = iso;
+        } else {
+          var type = n.indexOf("삭제") >= 0 ? "삭제" : "장제";
+          if (!e.shoe || e.shoe.date < iso) e.shoe = { date: iso, type: type };
+        }
       });
 
       var weekSet = {};
@@ -360,10 +367,14 @@
   function horseView(h) {
     var res = (cache && cache.resultMap[h.hrNo]) || {};
     var w = weights[h.hrNo] ? weights[h.hrNo].w : null;
+    var sm = (cache && cache.shoeMap[h.hrNo]) || {};
+    var shoe = sm.shoe || null;
+    // 정타는 마지막 본장제 이후에 있었던 것만 의미가 있음
+    var jeonta = sm.jeonta && (!shoe || sm.jeonta > shoe.date) ? sm.jeonta : null;
     return {
       hrNo: h.hrNo, name: h.name, rank: h.rank, weight: w,
       race: res.race || null,
-      shoe: (cache && cache.shoeMap[h.hrNo]) || null,
+      shoe: shoe, jeonta: jeonta,
       teeth: horseTeeth(h.hrNo),
       thisWeek: !!(cache && cache.weekSet[h.hrNo])
     };
@@ -524,6 +535,7 @@
       var shoeChip;
       if (v.shoe) shoeChip = chip(v.shoe.type, v.shoe.date, shoeStatus);
       else shoeChip = '<span class="chip due">장제 ' + SHOE_LOOKBACK_DAYS + "일↑</span>";
+      if (v.jeonta) shoeChip += chip("정타", v.jeonta, null);
       html += '<div class="horse-card"><button class="horse-head" data-horse="' + esc(v.hrNo) + '">' +
         '<div class="horse-top"><span class="horse-name">' + esc(v.name) +
         (v.rank ? '<span class="rank">' + esc(v.rank) + "</span>" : "") + "</span>" +
