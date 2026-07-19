@@ -23,6 +23,8 @@
     --warn-ink: #8a5f14;
     --due-bg: #f9e4df;
     --due-ink: #a33c2a;
+    --info-bg: #e1ecf7;
+    --info-ink: #2a5e8f;
     --shadow: 0 1px 3px rgba(28, 36, 32, 0.08);
   }
   @media (prefers-color-scheme: dark) {
@@ -30,7 +32,9 @@
       --bg: #141a17; --card: #1d2621; --ink: #e8ede9; --ink-soft: #97a39c;
       --line: #2c3831; --accent: #56b184; --accent-soft: #22352b;
       --ok-bg: #232d27; --ok-ink: #9aa8a0; --warn-bg: #383014; --warn-ink: #d9a83f;
-      --due-bg: #402019; --due-ink: #e5765f; --shadow: 0 1px 3px rgba(0,0,0,0.35);
+      --due-bg: #402019; --due-ink: #e5765f;
+      --info-bg: #1b2c3d; --info-ink: #74aede;
+      --shadow: 0 1px 3px rgba(0,0,0,0.35);
     }
   }
   * { box-sizing: border-box; }
@@ -104,6 +108,7 @@
   .chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
   .chip.due { background: var(--due-bg); color: var(--due-ink); }
   .chip.race { background: var(--accent-soft); color: var(--accent); }
+  .chip.info { background: var(--info-bg); color: var(--info-ink); }
 
   .edit-panel { border-top: 1px solid var(--line); padding: 14px; display: grid; gap: 10px; }
   .edit-detail { font-size: 0.82rem; color: var(--ink-soft); display: grid; gap: 2px; }
@@ -157,9 +162,9 @@
   <main id="view"><div class="loading">불러오는 중…</div></main>
   <footer>
     <div class="legend">
-      기준: <span class="chip">정상</span>
-      <span class="chip warn">장제 28일↑·정치 90일↑</span>
-      <span class="chip due">장제 35일↑·정치 120일↑</span>
+      기준: <span class="chip warn">장제 3주↑·정치 6개월↑</span>
+      <span class="chip due">장제 30일↑</span>
+      <span class="chip info">정치 6개월 미만</span>
     </div>
     <div>경주일·체중·장제는 한국마사회 공공데이터에서 자동으로 가져옵니다. 정치일자는 직접 입력하거나 진료정보 연동 시 자동 표시됩니다.</div>
   </footer>
@@ -223,8 +228,10 @@
     var now = new Date(); now.setHours(0, 0, 0, 0);
     return Math.round((now - then) / 86400000);
   }
-  function shoeStatus(d) { if (d === null) return "due"; if (d >= 35) return "due"; if (d >= 28) return "warn"; return ""; }
-  function teethStatus(d) { if (d === null) return ""; if (d >= 120) return "due"; if (d >= 90) return "warn"; return ""; }
+  // 장제: 3주(21일) 이상 노랑, 30일 이상 빨강
+  function shoeStatus(d) { if (d === null) return "due"; if (d >= 30) return "due"; if (d >= 21) return "warn"; return ""; }
+  // 정치: 6개월(180일) 이상 노랑, 그 미만은 파랑
+  function teethStatus(d) { if (d === null) return ""; if (d >= 180) return "warn"; return "info"; }
 
   // ---------- API ----------
   function bumpProgress() {
@@ -362,9 +369,8 @@
     };
   }
   function needsCheck(v) {
-    return !!(shoeStatus(v.shoe ? daysAgo(v.shoe.date) : null) === "due" ||
-      shoeStatus(v.shoe ? daysAgo(v.shoe.date) : null) === "warn" ||
-      teethStatus(daysAgo(v.teeth)));
+    var s = shoeStatus(v.shoe ? daysAgo(v.shoe.date) : null);
+    return s === "due" || s === "warn" || teethStatus(daysAgo(v.teeth)) === "warn";
   }
 
   // ---------- 화면 ----------
